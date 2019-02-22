@@ -61,4 +61,9 @@ workflows:
   test:
     jobs:
       - rspec
-      - lint
+      - lint:
+          filters:
+            branches:
+              ignore:
+                - master
+                - skip_lint_on_master
