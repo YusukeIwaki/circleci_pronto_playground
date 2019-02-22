@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build:
+  rspec:
     docker:
       - image: circleci/ruby:2.6-node-browsers
         environment:
@@ -36,3 +36,29 @@ jobs:
 
       - store_test_results:
           path: test_results
+
+  lint:
+    docker:
+      - image: circleci/ruby:2.6-node-browsers
+
+    steps:
+      - checkout
+
+      - run:
+          name: Install Pronto
+          command: sudo apt-get update && sudo apt-get -y install cmake && gem install pronto pronto-rubocop
+
+      - run:
+          name: Execute Pronto
+          command: |
+            export GITHUB_API_ENDPOINT=$(echo $CI_PULL_REQUEST | sed -e 's/github.com/api.github.com\/repos/g' | sed -e 's/pull/pulls/')
+            export BASE_COMMIT=$(curl --silent -H "Authorization: token $PRONTO_GITHUB_ACCESS_TOKEN" $GITHUB_API_ENDPOINT | jq -r .base.sha)
+            pronto run \
+              --runner=rubocop --formatters github_pr_review --commit=$BASE_COMMIT --exit-code
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - rspec
+      - lint
