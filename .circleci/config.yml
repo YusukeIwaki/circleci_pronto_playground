@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build:
+  rspec:
     docker:
       - image: circleci/ruby:2.6-node-browsers
         environment:
@@ -36,3 +36,25 @@ jobs:
 
       - store_test_results:
           path: test_results
+
+  lint:
+    docker:
+      - image: circleci/ruby:2.6-node-browsers
+
+    steps:
+      - checkout
+
+      - run:
+          name: Install Pronto
+          command: gem install pronto pronto-rubocop
+
+      - run:
+          name: Execute Pronto
+          command: pronto run --runner=rubocop --commit=$(git show origin/master --pretty=format:%H) --exit-code
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - rspec
+      - lint
